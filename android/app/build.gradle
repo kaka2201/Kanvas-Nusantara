@@ -77,9 +77,15 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+<<<<<<< HEAD
     namespace "com.kanvas"
     defaultConfig {
         applicationId "com.kanvas"
+=======
+    namespace "com.kanvasnusantara"
+    defaultConfig {
+        applicationId "com.kanvasnusantara"
+>>>>>>> d391d16 (Initial commit)
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "Kanvas",
+=======
+  "name": "KanvasNusantara",
+>>>>>>> d391d16 (Initial commit)
   "version": "0.0.1",
   "private": true,
   "scripts": {
