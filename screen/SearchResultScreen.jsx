@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
 } from 'react-native';
-import axios from 'axios';
+import firestore from '@react-native-firebase/firestore'; // Tetap dipertahankan
 import { colors, fontType } from '../src/theme';
 
 export default function SearchResultScreen({ route }) {
@@ -19,10 +19,11 @@ export default function SearchResultScreen({ route }) {
 
   const fetchPaintings = async () => {
     try {
-      const response = await axios.get('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas');
-      setPaintings(response.data);
+      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara'); // Ganti dengan URL kamu
+      const data = await response.json();
+      setPaintings(data);
     } catch (error) {
-      console.error('Error fetching paintings:', error);
+      console.error('Error fetching paintings from API:', error);
     } finally {
       setLoading(false);
     }
@@ -34,9 +35,9 @@ export default function SearchResultScreen({ route }) {
 
   const filtered = paintings.filter(
     (item) =>
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.artist.toLowerCase().includes(query.toLowerCase()) ||
-      item.category.toLowerCase().includes(query.toLowerCase())
+      item.title?.toLowerCase().includes(query.toLowerCase()) ||
+      item.artist?.toLowerCase().includes(query.toLowerCase()) ||
+      item.category?.toLowerCase().includes(query.toLowerCase())
   );
 
   const PaintingCard = ({ item }) => {
@@ -78,11 +79,11 @@ export default function SearchResultScreen({ route }) {
       {loading ? (
         <ActivityIndicator size="large" color={colors.gold()} style={{ marginTop: 40 }} />
       ) : filtered.length === 0 ? (
-        <Text style={styles.noResult}>No results for "{query}"</Text>
+        <Text style={styles.noResult}>Tidak ditemukan untuk "{query}"</Text>
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => <PaintingCard item={item} />}
         />

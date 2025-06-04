@@ -6,9 +6,10 @@ import {
   StyleSheet,
   Animated,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import { Element3 } from 'iconsax-react-native';
-import axios from 'axios';
+import firestore from '@react-native-firebase/firestore'; // tetap dipertahankan
 import SearchBar from '../components/SearchBar';
 import ListBlog from '../components/ListBlog';
 import { colors, fontType } from '../constants/theme';
@@ -17,17 +18,20 @@ import { useNavigation } from '@react-navigation/native';
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas');
-      const data = response.data;
-      // Ambil kategori unik
-      const uniqueCategories = [...new Set(data.map((item) => item.category))];
+      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara');
+      const data = await response.json();
+
+      const uniqueCategories = [...new Set(data.map(item => item.category))];
       setCategories(uniqueCategories);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error('Gagal mengambil kategori dari API:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,6 +91,15 @@ export default function HomeScreen() {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.blue()} />
+        <Text style={styles.loadingText}>Memuat kategori...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -134,6 +147,17 @@ const styles = StyleSheet.create({
   },
   listCategory: {
     paddingVertical: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: fontType['Pjs-Regular'],
+    fontSize: 16,
+    color: colors.grey(0.8),
   },
 });
 

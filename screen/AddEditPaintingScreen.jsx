@@ -14,6 +14,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { colors, fontType } from '../src/theme';
+import firestore from '@react-native-firebase/firestore'; // Tetap dipertahankan
+import axios from 'axios'; // Tambahkan axios untuk API call
 
 export default function AddEditPaintingScreen() {
   const route = useRoute();
@@ -21,7 +23,6 @@ export default function AddEditPaintingScreen() {
   const isEdit = route.params?.isEdit || false;
   const painting = route.params?.painting;
 
-  // Animated values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -78,41 +79,33 @@ export default function AddEditPaintingScreen() {
       return;
     }
 
-    const newData = { title, artist, image, category };
-    const API_URL = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas';
+    const newData = {
+      title,
+      artist,
+      image,
+      category,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const apiUrl = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara';
 
     try {
-      if (isEdit) {
-        // PUT request untuk update data
-        const response = await fetch(`${API_URL}/${painting.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newData),
-        });
-
-        if (!response.ok) throw new Error('Gagal update data');
-
+      if (isEdit && painting?.id) {
+        // UPDATE (Edit)
+        await axios.put(`${apiUrl}/${painting.id}`, newData);
         Alert.alert('Sukses', 'Data berhasil diperbarui');
       } else {
-        // POST request untuk tambah data
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newData),
+        // CREATE (Tambah)
+        await axios.post(apiUrl, {
+          ...newData,
+          createdAt: new Date().toISOString(),
         });
-
-        if (!response.ok) throw new Error('Gagal tambah data');
-
         Alert.alert('Sukses', 'Data berhasil ditambahkan');
       }
 
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Gagal menyimpan data');
     }
   };
 

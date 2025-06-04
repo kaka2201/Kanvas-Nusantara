@@ -14,6 +14,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { colors, fontType } from '../src/theme';
+import firestore from '@react-native-firebase/firestore'; // Tetap dipertahankan
+import axios from 'axios'; // Tambahan untuk akses API
 
 export default function AddPaintingScreen() {
   const navigation = useNavigation();
@@ -75,28 +77,19 @@ export default function AddPaintingScreen() {
 
     const newData = {
       title,
-      author,
+      artist: author,
       image,
       category,
+      createdAt: new Date().toISOString(),
     };
 
     try {
-      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Gagal menyimpan data ke server');
-      }
-
-      Alert.alert('Sukses', 'Lukisan berhasil ditambahkan');
+      // Simpan ke mockapi.io
+      await axios.post('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara', newData);
+      Alert.alert('Sukses', 'Lukisan berhasil ditambahkan ke MockAPI');
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Gagal menyimpan data');
     }
   };
 

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { colors, fontType } from '../constants/theme';
+import firestore from '@react-native-firebase/firestore'; // tetap disimpan sesuai permintaan
 
 export default function CategoryResultScreen() {
   const route = useRoute();
@@ -22,31 +23,32 @@ export default function CategoryResultScreen() {
   const [paintings, setPaintings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas';
-
   useEffect(() => {
+    const fetchPaintings = async () => {
+      try {
+        const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara');
+        const data = await response.json();
+
+        const filtered = data.filter((item) => item.category === category);
+        setPaintings(filtered);
+      } catch (error) {
+        console.error('Gagal mengambil data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPaintings();
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, []);
-
-  const fetchPaintings = async () => {
-    try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      setPaintings(data);
-    } catch (error) {
-      console.error('Gagal mengambil data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [category]);
 
   const handleEdit = (item) => {
-    navigation.navigate('AddEditPainting', { painting: item });
+    navigation.navigate('AddEditPainting', { painting: item, isEdit: true });
   };
 
   const handleDelete = (itemId) => {
@@ -60,17 +62,10 @@ export default function CategoryResultScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetch(`${API_URL}/${itemId}`, {
+              await fetch(`https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara/${itemId}`, {
                 method: 'DELETE',
               });
-
-              if (response.ok) {
-                setPaintings((prev) =>
-                  prev.filter((item) => item.id !== itemId)
-                );
-              } else {
-                console.error('Gagal menghapus data');
-              }
+              setPaintings((prev) => prev.filter((item) => item.id !== itemId));
             } catch (error) {
               console.error('Error saat menghapus:', error);
             }
@@ -80,16 +75,12 @@ export default function CategoryResultScreen() {
     );
   };
 
-  const filteredPaintings = paintings.filter(
-    (item) => item.category.toLowerCase() === category.toLowerCase()
-  );
-
   const renderItem = ({ item }) => (
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.author}>By {item.artist}</Text>
+        <Text style={styles.author}>By {item.author}</Text>
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.blue() }]}
@@ -121,8 +112,8 @@ export default function CategoryResultScreen() {
     <View style={styles.container}>
       <Text style={styles.header}>Kategori: {category}</Text>
       <FlatList
-        data={filteredPaintings}
-        keyExtractor={(item) => item.id.toString()}
+        data={paintings}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}

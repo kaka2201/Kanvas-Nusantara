@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
 import { colors, fontType } from '../src/theme';
+import firestore from '@react-native-firebase/firestore'; // Tidak dihapus
 
 export default function CategoryList() {
   const navigation = useNavigation();
@@ -12,14 +19,17 @@ export default function CategoryList() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas');
-      const data = response.data;
+      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara'); // Ganti dengan URL asli
+      const data = await response.json();
 
-      const uniqueCategories = [...new Set(data.map(item => item.category).filter(Boolean))];
+      // Ambil semua kategori dari data API, pastikan tidak null lalu jadikan unik
+      const allCategories = data.map(item => item.category).filter(Boolean);
+      const uniqueCategories = [...new Set(allCategories)];
+
       setCategories(uniqueCategories);
-      setSelectedCategory(uniqueCategories[0]);
+      setSelectedCategory(uniqueCategories[0] || null);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error('Failed to fetch categories from API:', error);
     } finally {
       setLoading(false);
     }
@@ -47,15 +57,19 @@ export default function CategoryList() {
             onPress={() => handleCategoryPress(category)}
             style={[
               styles.item,
-              index === 0 ? { marginLeft: 24 } : index === categories.length - 1 ? { marginRight: 24 } : {},
-              selectedCategory === category && { backgroundColor: colors.gold(0.1) }
+              index === 0
+                ? { marginLeft: 24 }
+                : index === categories.length - 1
+                ? { marginRight: 24 }
+                : {},
+              selectedCategory === category && { backgroundColor: colors.gold(0.1) },
             ]}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.title,
-                selectedCategory === category ? { color: colors.gold() } : {}
+                selectedCategory === category ? { color: colors.gold() } : {},
               ]}
             >
               {category}
