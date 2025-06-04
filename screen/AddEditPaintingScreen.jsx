@@ -72,21 +72,48 @@ export default function AddEditPaintingScreen() {
     }).start();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title || !artist || !image || !category) {
       Alert.alert('Error', 'Semua field wajib diisi');
       return;
     }
 
     const newData = { title, artist, image, category };
+    const API_URL = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas';
 
-    if (isEdit) {
-      console.log('Update data:', { id: painting.id, ...newData });
-    } else {
-      console.log('Tambah data baru:', newData);
+    try {
+      if (isEdit) {
+        // PUT request untuk update data
+        const response = await fetch(`${API_URL}/${painting.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newData),
+        });
+
+        if (!response.ok) throw new Error('Gagal update data');
+
+        Alert.alert('Sukses', 'Data berhasil diperbarui');
+      } else {
+        // POST request untuk tambah data
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newData),
+        });
+
+        if (!response.ok) throw new Error('Gagal tambah data');
+
+        Alert.alert('Sukses', 'Data berhasil ditambahkan');
+      }
+
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
-
-    navigation.goBack();
   };
 
   return (

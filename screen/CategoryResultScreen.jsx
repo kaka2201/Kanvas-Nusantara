@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,54 +7,11 @@ import {
   FlatList,
   TouchableOpacity,
   Animated,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { colors, fontType } from '../constants/theme'; // pastikan path sesuai
-
-const paintings = [
-  {
-      id: 1,
-      title: 'The Scream',
-      artist: 'Edvard Munch',
-      category: 'Expressionism',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/1200px-The_Scream.jpg',
-    },
-    {
-      id: 2,
-      title: 'The Last Supper',
-      artist: 'Leonardo da Vinci',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg/1200px-The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg',
-    },
-    {
-      id: 3,
-      title: 'Guernica',
-      artist: 'Pablo Picasso',
-      category: 'Cubism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/7/74/PicassoGuernica.jpg',
-    },
-    {
-      id: 4,
-      title: 'The Persistence of Memory',
-      artist: 'Salvador Dalí',
-      category: 'Surrealism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg',
-    },
-    {
-      id: 5,
-      title: 'The Creation of Adam',
-      artist: 'Michelangelo',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg',
-    },
-    {
-      id: 6,
-      title: 'The Birth of Venus',
-      artist: 'Sandro Botticelli',
-      category: 'Renaissance',
-      image: 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=800&q=60',
-    },
-];
+import { colors, fontType } from '../constants/theme';
 
 export default function CategoryResultScreen() {
   const route = useRoute();
@@ -62,23 +19,70 @@ export default function CategoryResultScreen() {
   const { category } = route.params;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [paintings, setPaintings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas';
 
   useEffect(() => {
+    fetchPaintings();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim]);
+  }, []);
+
+  const fetchPaintings = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      setPaintings(data);
+    } catch (error) {
+      console.error('Gagal mengambil data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (item) => {
     navigation.navigate('AddEditPainting', { painting: item });
   };
 
   const handleDelete = (itemId) => {
-    // Contoh: Tambahkan alert konfirmasi jika perlu
-    console.log('Delete painting with id:', itemId);
+    Alert.alert(
+      'Konfirmasi',
+      'Apakah Anda yakin ingin menghapus lukisan ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_URL}/${itemId}`, {
+                method: 'DELETE',
+              });
+
+              if (response.ok) {
+                setPaintings((prev) =>
+                  prev.filter((item) => item.id !== itemId)
+                );
+              } else {
+                console.error('Gagal menghapus data');
+              }
+            } catch (error) {
+              console.error('Error saat menghapus:', error);
+            }
+          },
+        },
+      ]
+    );
   };
+
+  const filteredPaintings = paintings.filter(
+    (item) => item.category.toLowerCase() === category.toLowerCase()
+  );
 
   const renderItem = ({ item }) => (
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
@@ -104,10 +108,14 @@ export default function CategoryResultScreen() {
     </Animated.View>
   );
 
-  // Filter paintings berdasarkan kategori yang dipilih
-  const filteredPaintings = paintings.filter(
-    (item) => item.category === category
-  );
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.black()} />
+        <Text style={styles.loadingText}>Memuat data lukisan...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -185,5 +193,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.grey(0.6),
     marginTop: 50,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: fontType['Pjs-Regular'],
+    color: colors.black(),
   },
 });

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { Element3 } from 'iconsax-react-native';
+import axios from 'axios';
 import SearchBar from '../components/SearchBar';
 import ListBlog from '../components/ListBlog';
 import { colors, fontType } from '../constants/theme';
@@ -15,33 +16,38 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-
-  const handleSearch = (query) => {
-    navigation.navigate('SearchResult', { query });
-  };
-
-  const categories = [
-    'Renaissance',
-    'Cubism',
-    'Expressionism',
-    'Surrealism',
-    'Abstract',
-    'Contemporary',
-  ];
-
-  const handleCategoryPress = (category) => {
-    navigation.navigate('CategoryResult', { category }); // Navigasi ke layar CategoryResultScreen
-  };
-
+  const [categories, setCategories] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas');
+      const data = response.data;
+      // Ambil kategori unik
+      const uniqueCategories = [...new Set(data.map((item) => item.category))];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchCategories();
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  const handleSearch = (query) => {
+    navigation.navigate('SearchResult', { query });
+  };
+
+  const handleCategoryPress = (category) => {
+    navigation.navigate('CategoryResult', { category });
+  };
 
   const CategoryItem = ({ item, index }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;

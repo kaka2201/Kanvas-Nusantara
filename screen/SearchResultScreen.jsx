@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,56 +7,30 @@ import {
   StyleSheet,
   Animated,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
+import axios from 'axios';
 import { colors, fontType } from '../src/theme';
 
 export default function SearchResultScreen({ route }) {
   const { query } = route.params;
+  const [paintings, setPaintings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const paintings = [
-     {
-      id: 1,
-      title: 'The Scream',
-      artist: 'Edvard Munch',
-      category: 'Expressionism',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/1200px-The_Scream.jpg',
-    },
-    {
-      id: 2,
-      title: 'The Last Supper',
-      artist: 'Leonardo da Vinci',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg/1200px-The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg',
-    },
-    {
-      id: 3,
-      title: 'Guernica',
-      artist: 'Pablo Picasso',
-      category: 'Cubism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/7/74/PicassoGuernica.jpg',
-    },
-    {
-      id: 4,
-      title: 'The Persistence of Memory',
-      artist: 'Salvador Dalí',
-      category: 'Surrealism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg',
-    },
-    {
-      id: 5,
-      title: 'The Creation of Adam',
-      artist: 'Michelangelo',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg',
-    },
-    {
-      id: 6,
-      title: 'The Birth of Venus',
-      artist: 'Sandro Botticelli',
-      category: 'Renaissance',
-      image: 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=800&q=60',
-    },
-  ];
+  const fetchPaintings = async () => {
+    try {
+      const response = await axios.get('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas');
+      setPaintings(response.data);
+    } catch (error) {
+      console.error('Error fetching paintings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaintings();
+  }, []);
 
   const filtered = paintings.filter(
     (item) =>
@@ -65,7 +39,6 @@ export default function SearchResultScreen({ route }) {
       item.category.toLowerCase().includes(query.toLowerCase())
   );
 
-  // Komponen kartu dengan animasi scale on press
   const PaintingCard = ({ item }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -102,7 +75,9 @@ export default function SearchResultScreen({ route }) {
         {filtered.length} hasil untuk "{query}"
       </Text>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.gold()} style={{ marginTop: 40 }} />
+      ) : filtered.length === 0 ? (
         <Text style={styles.noResult}>No results for "{query}"</Text>
       ) : (
         <FlatList

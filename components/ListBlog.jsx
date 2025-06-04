@@ -1,52 +1,83 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { colors, fontType } from '../constants/theme';
 
 export default function ListBlog() {
-  const paintings = [
-    {
-      id: 1,
-      title: 'The Scream',
-      artist: 'Edvard Munch',
-      category: 'Expressionism',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/1200px-The_Scream.jpg',
-    },
-    {
-      id: 2,
-      title: 'The Last Supper',
-      artist: 'Leonardo da Vinci',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg/1200px-The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg',
-    },
-    {
-      id: 3,
-      title: 'Guernica',
-      artist: 'Pablo Picasso',
-      category: 'Cubism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/7/74/PicassoGuernica.jpg',
-    },
-    {
-      id: 4,
-      title: 'The Persistence of Memory',
-      artist: 'Salvador Dalí',
-      category: 'Surrealism',
-      image: 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg',
-    },
-    {
-      id: 5,
-      title: 'The Creation of Adam',
-      artist: 'Michelangelo',
-      category: 'Renaissance',
-      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg',
-    },
-    {
-      id: 6,
-      title: 'The Birth of Venus',
-      artist: 'Sandro Botticelli',
-      category: 'Renaissance',
-      image: 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=800&q=60',
-    },
-  ];
+  const navigation = useNavigation();
+
+  const [paintings, setPaintings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = 'https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas';
+
+  const fetchPaintings = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      setPaintings(data);
+    } catch (error) {
+      console.error('Gagal mengambil data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaintings();
+  }, []);
+
+  const handleEdit = (item) => {
+    navigation.navigate('AddEditPainting', { painting: item });
+  };
+
+  const handleDelete = (itemId) => {
+    Alert.alert(
+      'Konfirmasi',
+      'Apakah Anda yakin ingin menghapus lukisan ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_URL}/${itemId}`, {
+                method: 'DELETE',
+              });
+              if (response.ok) {
+                // Update state untuk hapus item secara lokal
+                setPaintings((prev) => prev.filter((item) => item.id !== itemId));
+              } else {
+                Alert.alert('Error', 'Gagal menghapus data.');
+              }
+            } catch (error) {
+              console.error('Error saat menghapus:', error);
+              Alert.alert('Error', 'Terjadi kesalahan saat menghapus.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.black()} />
+        <Text style={styles.loadingText}>Memuat data...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView>
@@ -58,6 +89,21 @@ export default function ListBlog() {
               <Text style={styles.cardCategory}>{painting.category}</Text>
               <Text style={styles.cardTitle}>{painting.title}</Text>
               <Text style={styles.cardText}>{painting.artist}</Text>
+
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: colors.blue() }]}
+                  onPress={() => handleEdit(painting)}
+                >
+                  <Text style={styles.buttonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: colors.red() }]}
+                  onPress={() => handleDelete(painting.id)}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         ))}
@@ -77,12 +123,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     elevation: 5,
     marginBottom: 15,
+    overflow: 'hidden',
   },
   cardImage: {
     width: '100%',
     height: 250,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
     resizeMode: 'cover',
   },
   cardContent: {
@@ -108,5 +153,31 @@ const styles = StyleSheet.create({
     color: colors.grey(),
     marginTop: 5,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: fontType['Pjs-Regular'],
+    color: colors.black(),
+  },
+  actions: {
+    flexDirection: 'row',
+    marginTop: 15,
+    gap: 15,
+  },
+  button: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  buttonText: {
+    color: colors.white(),
+    fontFamily: fontType['Pjs-Medium'],
+    fontSize: 14,
   },
 });

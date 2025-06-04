@@ -17,11 +17,7 @@ import { colors, fontType } from '../src/theme';
 
 export default function AddPaintingScreen() {
   const navigation = useNavigation();
-
-  // Animated value for fade in form container
   const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  // Animated value for scale button press
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const [title, setTitle] = useState('');
@@ -30,7 +26,6 @@ export default function AddPaintingScreen() {
   const [category, setCategory] = useState('');
 
   useEffect(() => {
-    // Run fade-in animation when component mounts
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
@@ -47,7 +42,7 @@ export default function AddPaintingScreen() {
 
     launchImageLibrary(options, (response) => {
       if (response.didCancel) {
-        // batal pilih gambar
+        // batal
       } else if (response.errorCode) {
         Alert.alert('Error', response.errorMessage);
       } else {
@@ -57,7 +52,6 @@ export default function AddPaintingScreen() {
     });
   };
 
-  // Animasi scale saat tombol ditekan
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
       toValue: 0.95,
@@ -73,17 +67,37 @@ export default function AddPaintingScreen() {
     }).start();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title || !author || !image || !category) {
       Alert.alert('Error', 'Semua field wajib diisi');
       return;
     }
 
-    const newData = { title, author, image, category };
+    const newData = {
+      title,
+      author,
+      image,
+      category,
+    };
 
-    console.log('Tambah data baru:', newData);
+    try {
+      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newData),
+      });
 
-    navigation.goBack();
+      if (!response.ok) {
+        throw new Error('Gagal menyimpan data ke server');
+      }
+
+      Alert.alert('Sukses', 'Lukisan berhasil ditambahkan');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (
@@ -146,7 +160,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.grey(0.3),
+    borderColor: colors.grey(),
     borderRadius: 8,
     padding: 10,
     marginTop: 5,
@@ -160,7 +174,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   uploadButton: {
-    backgroundColor: colors.grey(0.2),
+    backgroundColor: colors.grey(),
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
