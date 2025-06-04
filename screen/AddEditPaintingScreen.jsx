@@ -26,7 +26,7 @@ export default function AddEditPaintingScreen() {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const [title, setTitle] = useState(painting?.title || '');
-  const [author, setAuthor] = useState(painting?.author || '');
+  const [artist, setArtist] = useState(painting?.artist || '');
   const [image, setImage] = useState(painting?.image || '');
   const [category, setCategory] = useState(painting?.category || '');
 
@@ -73,12 +73,12 @@ export default function AddEditPaintingScreen() {
   };
 
   const handleSave = () => {
-    if (!title || !author || !image || !category) {
+    if (!title || !artist || !image || !category) {
       Alert.alert('Error', 'Semua field wajib diisi');
       return;
     }
 
-    const newData = { title, author, image, category };
+    const newData = { title, artist, image, category };
 
     if (isEdit) {
       console.log('Update data:', { id: painting.id, ...newData });
@@ -95,7 +95,7 @@ export default function AddEditPaintingScreen() {
       <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
       <Text style={styles.label}>Nama Penulis</Text>
-      <TextInput style={styles.input} value={author} onChangeText={setAuthor} />
+      <TextInput style={styles.input} value={artist} onChangeText={setArtist} />
 
       <Text style={styles.label}>Kategori</Text>
       <TextInput

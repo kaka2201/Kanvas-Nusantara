@@ -1,34 +1,59 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   Image,
-  Pressable,
-  Alert,
+  FlatList,
+  TouchableOpacity,
   Animated,
-  Easing,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { colors, fontType } from '../src/theme';
+import { colors, fontType } from '../constants/theme'; // pastikan path sesuai
 
-const paintingsDataInit = [
+const paintings = [
   {
-    id: '1',
-    category: 'Renaissance',
-    name: 'Mona Lisa',
-    author: 'Leonardo da Vinci',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Mona_Lisa.jpg',
-  },
-  {
-    id: '2',
-    category: 'Baroque',
-    name: 'The Night Watch',
-    author: 'Rembrandt',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/2/25/The_Nightwatch_by_Rembrandt.jpg',
-  },
-  // Tambahkan data lainnya sesuai kebutuhan
+      id: 1,
+      title: 'The Scream',
+      artist: 'Edvard Munch',
+      category: 'Expressionism',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/1200px-The_Scream.jpg',
+    },
+    {
+      id: 2,
+      title: 'The Last Supper',
+      artist: 'Leonardo da Vinci',
+      category: 'Renaissance',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg/1200px-The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg',
+    },
+    {
+      id: 3,
+      title: 'Guernica',
+      artist: 'Pablo Picasso',
+      category: 'Cubism',
+      image: 'https://upload.wikimedia.org/wikipedia/en/7/74/PicassoGuernica.jpg',
+    },
+    {
+      id: 4,
+      title: 'The Persistence of Memory',
+      artist: 'Salvador Dalí',
+      category: 'Surrealism',
+      image: 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg',
+    },
+    {
+      id: 5,
+      title: 'The Creation of Adam',
+      artist: 'Michelangelo',
+      category: 'Renaissance',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg',
+    },
+    {
+      id: 6,
+      title: 'The Birth of Venus',
+      artist: 'Sandro Botticelli',
+      category: 'Renaissance',
+      image: 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=800&q=60',
+    },
 ];
 
 export default function CategoryResultScreen() {
@@ -36,118 +61,67 @@ export default function CategoryResultScreen() {
   const navigation = useNavigation();
   const { category } = route.params;
 
-  const [paintingsData, setPaintingsData] = useState(paintingsDataInit);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const filteredPaintings = paintingsData.filter((item) => item.category === category);
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
   const handleEdit = (item) => {
-    navigation.navigate('AddEditPainting', {
-      isEdit: true,
-      painting: {
-        id: item.id,
-        title: item.name,
-        author: item.author,
-        image: item.image,
-        category: item.category,
-      },
-    });
+    navigation.navigate('AddEditPainting', { painting: item });
   };
 
-  const handleDelete = (item) => {
-    Alert.alert(
-      'Hapus Data',
-      `Apakah Anda yakin ingin menghapus lukisan: ${item.name}?`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hapus',
-          style: 'destructive',
-          onPress: () => {
-            setPaintingsData((prev) => prev.filter((p) => p.id !== item.id));
-          },
-        },
-      ]
-    );
+  const handleDelete = (itemId) => {
+    // Contoh: Tambahkan alert konfirmasi jika perlu
+    console.log('Delete painting with id:', itemId);
   };
 
-  // Komponen Item dengan animasi fade-in dan tombol scale
-  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-  const RenderItem = ({ item }) => {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleEdit = useRef(new Animated.Value(1)).current;
-    const scaleDelete = useRef(new Animated.Value(1)).current;
-
-    useEffect(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.ease),
-      }).start();
-    }, [fadeAnim]);
-
-    const onPressIn = (anim) => {
-      Animated.spring(anim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-      }).start();
-    };
-    const onPressOut = (anim) => {
-      Animated.spring(anim, {
-        toValue: 1,
-        friction: 3,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    return (
-      <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-        <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
-        <View style={styles.info}>
-          <Text style={styles.paintingName}>{item.name}</Text>
-          <Text style={styles.authorName}>{item.author}</Text>
-
-          <View style={styles.buttonsContainer}>
-            <AnimatedPressable
-              style={[styles.button, styles.editButton, { transform: [{ scale: scaleEdit }] }]}
-              onPress={() => handleEdit(item)}
-              onPressIn={() => onPressIn(scaleEdit)}
-              onPressOut={() => onPressOut(scaleEdit)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Edit</Text>
-            </AnimatedPressable>
-
-            <AnimatedPressable
-              style={[styles.button, styles.deleteButton, { transform: [{ scale: scaleDelete }] }]}
-              onPress={() => handleDelete(item)}
-              onPressIn={() => onPressIn(scaleDelete)}
-              onPressOut={() => onPressOut(scaleDelete)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Hapus</Text>
-            </AnimatedPressable>
-          </View>
+  const renderItem = ({ item }) => (
+    <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+      <Image source={{ uri: item.image }} style={styles.image} />
+      <View style={styles.info}>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.author}>By {item.artist}</Text>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.blue() }]}
+            onPress={() => handleEdit(item)}
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.red() }]}
+            onPress={() => handleDelete(item.id)}
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </TouchableOpacity>
         </View>
-      </Animated.View>
-    );
-  };
+      </View>
+    </Animated.View>
+  );
+
+  // Filter paintings berdasarkan kategori yang dipilih
+  const filteredPaintings = paintings.filter(
+    (item) => item.category === category
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Kategori: {category}</Text>
-
-      {filteredPaintings.length === 0 ? (
-        <Text style={styles.noDataText}>Belum ada lukisan untuk kategori ini.</Text>
-      ) : (
-        <FlatList
-          data={filteredPaintings}
-          renderItem={RenderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
-      )}
+      <Text style={styles.header}>Kategori: {category}</Text>
+      <FlatList
+        data={filteredPaintings}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        contentContainerStyle={{ padding: 16 }}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Tidak ada lukisan pada kategori ini.</Text>
+        }
+      />
     </View>
   );
 }
@@ -156,67 +130,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white(),
-    padding: 20,
   },
-  title: {
-    fontSize: 20,
+  header: {
+    fontSize: 22,
     fontFamily: fontType['Pjs-Bold'],
-    color: colors.black(),
-    marginBottom: 15,
-  },
-  noDataText: {
-    fontSize: 16,
-    color: colors.grey(),
-    fontFamily: fontType['Pjs-Regular'],
     textAlign: 'center',
-    marginTop: 40,
+    marginVertical: 20,
+    color: colors.black(),
   },
   card: {
-    flexDirection: 'row',
-    marginBottom: 15,
     backgroundColor: colors.white(),
+    borderRadius: 12,
     elevation: 3,
-    borderRadius: 10,
+    marginBottom: 16,
     overflow: 'hidden',
   },
   image: {
-    width: 100,
-    height: 100,
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
   },
   info: {
-    flex: 1,
-    paddingHorizontal: 15,
-    justifyContent: 'center',
+    padding: 12,
   },
-  paintingName: {
-    fontSize: 16,
+  title: {
+    fontSize: 18,
     fontFamily: fontType['Pjs-SemiBold'],
     color: colors.black(),
   },
-  authorName: {
+  author: {
     fontSize: 14,
     fontFamily: fontType['Pjs-Regular'],
-    color: colors.grey(),
-    marginTop: 4,
+    color: colors.grey(0.8),
+    marginVertical: 4,
   },
-  buttonsContainer: {
+  actions: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
     marginTop: 10,
   },
   button: {
-    paddingVertical: 5,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: 8,
-    marginRight: 10,
-  },
-  editButton: {
-    backgroundColor: colors.gold(),
-  },
-  deleteButton: {
-    backgroundColor: colors.red ? colors.red() : '#ff4d4d',
   },
   buttonText: {
+    fontSize: 14,
+    fontFamily: fontType['Pjs-Medium'],
     color: colors.white(),
-    fontFamily: fontType['Pjs-SemiBold'],
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: colors.grey(0.6),
+    marginTop: 50,
   },
 });

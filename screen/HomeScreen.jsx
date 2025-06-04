@@ -30,10 +30,9 @@ export default function HomeScreen() {
   ];
 
   const handleCategoryPress = (category) => {
-    navigation.navigate('CategoryResult', { category });
+    navigation.navigate('CategoryResult', { category }); // Navigasi ke layar CategoryResultScreen
   };
 
-  // Animasi fade-in untuk list kategori
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -42,9 +41,8 @@ export default function HomeScreen() {
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim]);
+  }, []);
 
-  // Komponen kategori dengan animasi scale on press
   const CategoryItem = ({ item, index }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -71,13 +69,13 @@ export default function HomeScreen() {
       >
         <Animated.View
           style={[
-            category.item,
+            stylesCategory.item,
             index === 0 && { marginLeft: 24 },
             index === categories.length - 1 && { marginRight: 24 },
             { transform: [{ scale: scaleAnim }] },
           ]}
         >
-          <Text style={category.title}>{item}</Text>
+          <Text style={stylesCategory.title}>{item}</Text>
         </Animated.View>
       </TouchableWithoutFeedback>
     );
@@ -101,7 +99,6 @@ export default function HomeScreen() {
       </Animated.View>
 
       <SearchBar onSearch={handleSearch} />
-
       <ListBlog />
     </View>
   );
@@ -134,7 +131,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const category = StyleSheet.create({
+const stylesCategory = StyleSheet.create({
   item: {
     paddingHorizontal: 20,
     paddingVertical: 10,

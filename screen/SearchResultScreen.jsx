@@ -1,13 +1,20 @@
-import React from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  StyleSheet,
+  Animated,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { colors, fontType } from '../src/theme';
 
 export default function SearchResultScreen({ route }) {
   const { query } = route.params;
 
-  // Contoh data lukisan (bisa kamu ganti nanti dengan API atau filter dari global state)
   const paintings = [
-    {
+     {
       id: 1,
       title: 'The Scream',
       artist: 'Edvard Munch',
@@ -28,7 +35,27 @@ export default function SearchResultScreen({ route }) {
       category: 'Cubism',
       image: 'https://upload.wikimedia.org/wikipedia/en/7/74/PicassoGuernica.jpg',
     },
-    // Tambahkan lainnya jika perlu...
+    {
+      id: 4,
+      title: 'The Persistence of Memory',
+      artist: 'Salvador Dalí',
+      category: 'Surrealism',
+      image: 'https://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg',
+    },
+    {
+      id: 5,
+      title: 'The Creation of Adam',
+      artist: 'Michelangelo',
+      category: 'Renaissance',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1200px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg',
+    },
+    {
+      id: 6,
+      title: 'The Birth of Venus',
+      artist: 'Sandro Botticelli',
+      category: 'Renaissance',
+      image: 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&w=800&q=60',
+    },
   ];
 
   const filtered = paintings.filter(
@@ -38,8 +65,43 @@ export default function SearchResultScreen({ route }) {
       item.category.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Komponen kartu dengan animasi scale on press
+  const PaintingCard = ({ item }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const onPressIn = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 0.96,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onPressOut = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <TouchableWithoutFeedback onPressIn={onPressIn} onPressOut={onPressOut}>
+        <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
+          <Image source={{ uri: item.image }} style={styles.image} />
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.artist}>{item.artist}</Text>
+          <Text style={styles.category}>{item.category}</Text>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    );
+  };
+
   return (
     <View style={styles.container}>
+      <Text style={styles.resultCount}>
+        {filtered.length} hasil untuk "{query}"
+      </Text>
+
       {filtered.length === 0 ? (
         <Text style={styles.noResult}>No results for "{query}"</Text>
       ) : (
@@ -47,14 +109,7 @@ export default function SearchResultScreen({ route }) {
           data={filtered}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Image source={{ uri: item.image }} style={styles.image} />
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.artist}>{item.artist}</Text>
-              <Text style={styles.category}>{item.category}</Text>
-            </View>
-          )}
+          renderItem={({ item }) => <PaintingCard item={item} />}
         />
       )}
     </View>
@@ -67,16 +122,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white(),
     padding: 16,
   },
+  resultCount: {
+    fontFamily: fontType['Pjs-Medium'],
+    fontSize: 14,
+    color: colors.grey(),
+    marginBottom: 10,
+  },
   list: {
     paddingBottom: 20,
   },
   card: {
     backgroundColor: colors.white(),
     borderRadius: 12,
-    elevation: 4,
+    elevation: 6,
     marginBottom: 20,
-    padding: 10,
+    padding: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   image: {
     width: '100%',
