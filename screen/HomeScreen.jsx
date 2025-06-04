@@ -22,18 +22,27 @@ export default function HomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const fetchCategories = async () => {
-    try {
-      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara');
-      const data = await response.json();
+  try {
+    const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara');
+    const data = await response.json();
 
+    console.log('RESPON API:', data); // Tambahkan debug log
+
+    if (Array.isArray(data)) {
       const uniqueCategories = [...new Set(data.map(item => item.category))];
       setCategories(uniqueCategories);
-    } catch (error) {
-      console.error('Gagal mengambil kategori dari API:', error);
-    } finally {
-      setLoading(false);
+    } else {
+      console.warn('API tidak mengembalikan array:', data);
+      setCategories([]);
     }
-  };
+  } catch (error) {
+    console.error('Gagal mengambil kategori dari API:', error);
+    setCategories([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchCategories();

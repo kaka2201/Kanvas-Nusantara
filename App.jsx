@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,6 +9,8 @@ import CategoryResultScreen from './screen/CategoryResultScreen';
 import AddEditPaintingScreen from './screen/AddEditPaintingScreen';
 import AddPaintingScreen from './screen/AddPaintingScreen';
 import { colors } from './src/theme';
+import messaging from '@react-native-firebase/messaging';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -26,6 +28,36 @@ function HomeStack() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const setupFCM = async () => {
+      try {
+        // Minta izin notifikasi (Android 13+)
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.warn('Permission not granted for notifications');
+            return;
+          }
+        }
+
+        // Register device & ambil token
+        await messaging().registerDeviceForRemoteMessages();
+        const token = await messaging().getToken();
+        console.log('FCM Token:', token);
+
+        // Subscribe to topic
+        await messaging().subscribeToTopic('kanvasnusantara');
+        console.log('Subscribed to topic "kanvasnusantara"');
+      } catch (error) {
+        console.error('FCM setup error:', error);
+      }
+    };
+
+    setupFCM();
+  }, []);
+
   return (
     <NavigationContainer>
       <Tab.Navigator

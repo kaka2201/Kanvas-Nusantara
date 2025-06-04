@@ -15,17 +15,25 @@ export default function ListBlog() {
   const [loading, setLoading] = useState(true);
 
   const fetchPaintings = async () => {
-    try {
-      // Ambil data dari endpoint API mockapi.io
-      const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara'); // Ganti URL ini dengan endpoint aslimu
-      const data = await response.json();
+  try {
+    const response = await fetch('https://6829d51aab2b5004cb34e747.mockapi.io/api/kanvasnusantara');
+    const data = await response.json();
+
+    // Pastikan data adalah array
+    if (Array.isArray(data)) {
       setPaintings(data);
-    } catch (error) {
-      console.error('Gagal mengambil data dari API:', error);
-    } finally {
-      setLoading(false);
+    } else {
+      console.warn('Data dari API bukan array:', data);
+      setPaintings([]);
     }
-  };
+  } catch (error) {
+    console.error('Gagal mengambil data dari API:', error);
+    setPaintings([]); // fallback kosong agar tidak crash
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchPaintings();
