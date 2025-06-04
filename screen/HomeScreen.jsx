@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  Animated,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Element3 } from 'iconsax-react-native';
 import SearchBar from '../components/SearchBar';
@@ -19,10 +20,67 @@ export default function HomeScreen() {
     navigation.navigate('SearchResult', { query });
   };
 
-  const categories =  ['Renaissance', 'Cubism', 'Expressionism', 'Surrealism', 'Abstract', 'Contemporary'];
+  const categories = [
+    'Renaissance',
+    'Cubism',
+    'Expressionism',
+    'Surrealism',
+    'Abstract',
+    'Contemporary',
+  ];
 
   const handleCategoryPress = (category) => {
     navigation.navigate('CategoryResult', { category });
+  };
+
+  // Animasi fade-in untuk list kategori
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
+  // Komponen kategori dengan animasi scale on press
+  const CategoryItem = ({ item, index }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const onPressIn = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onPressOut = () => {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <TouchableWithoutFeedback
+        onPress={() => handleCategoryPress(item)}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+      >
+        <Animated.View
+          style={[
+            category.item,
+            index === 0 && { marginLeft: 24 },
+            index === categories.length - 1 && { marginRight: 24 },
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <Text style={category.title}>{item}</Text>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    );
   };
 
   return (
@@ -34,24 +92,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.listCategory}>
+      <Animated.View style={[styles.listCategory, { opacity: fadeAnim }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {categories.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                category.item,
-                index === 0 && { marginLeft: 24 },
-                index === categories.length - 1 && { marginRight: 24 },
-              ]}
-              onPress={() => handleCategoryPress(item)}
-              activeOpacity={0.7}
-            >
-              <Text style={category.title}>{item}</Text>
-            </TouchableOpacity>
+            <CategoryItem key={index} item={item} index={index} />
           ))}
         </ScrollView>
-      </View>
+      </Animated.View>
 
       <SearchBar onSearch={handleSearch} />
 
