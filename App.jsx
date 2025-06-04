@@ -1,6 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Image, Pressable, TextInput } from 'react-native';
 import { Element3, SearchNormal } from 'iconsax-react-native';
+import { ScrollView, StyleSheet, Text, View, Image, Pressable, TextInput } from 'react-native';
 import { fontType, colors } from './src/theme';
 
 export default function App() {
